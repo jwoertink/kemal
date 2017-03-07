@@ -1,7 +1,7 @@
-# Opening HTTP::Request to add override_method property
 class HTTP::Request
   property override_method
   property url_params : Hash(String, String)?
+  getter param_parser : Kemal::ParamParser?
 
   def override_method
     @override_method ||= check_for_method_override!
@@ -18,7 +18,8 @@ class HTTP::Request
   private def check_for_method_override!
     @override_method = @method
     if @method == "POST"
-      params = Kemal::ParamParser.new(self).body
+      @param_parser = Kemal::ParamParser.new(self)
+      params = @param_parser.not_nil!.body
       if params.has_key?("_method") && HTTP::Request.override_method_valid?(params["_method"])
         @override_method = params["_method"]
       end

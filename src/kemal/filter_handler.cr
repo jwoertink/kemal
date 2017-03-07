@@ -1,12 +1,12 @@
-module Kemal::Middleware
-  # Kemal::Filter handle all code that should be evaluated before and after
-  # every request
-  class Filter < HTTP::Handler
+module Kemal
+  # :nodoc:
+  class FilterHandler
+    include HTTP::Handler
     INSTANCE = new
 
     # This middleware is lazily instantiated and added to the handlers as soon as a call to `after_X` or `before_X` is made.
     def initialize
-      @tree = Radix::Tree(Array(Kemal::Middleware::FilterBlock)).new
+      @tree = Radix::Tree(Array(FilterBlock)).new
       Kemal.config.add_filter_handler(self)
     end
 
@@ -68,30 +68,18 @@ module Kemal::Middleware
     private def radix_path(verb, path, type : Symbol)
       "#{type}/#{verb}/#{path}"
     end
-  end
 
-  # :nodoc:
-  class FilterBlock
-    property block : HTTP::Server::Context -> String
+    # :nodoc:
+    class FilterBlock
+      property block : HTTP::Server::Context -> String
 
-    def initialize(&block : HTTP::Server::Context -> _)
-      @block = ->(context : HTTP::Server::Context) { block.call(context).to_s }
-    end
+      def initialize(&block : HTTP::Server::Context -> _)
+        @block = ->(context : HTTP::Server::Context) { block.call(context).to_s }
+      end
 
-    def call(context)
-      @block.call(context)
+      def call(context)
+        @block.call(context)
+      end
     end
   end
 end
-
-# All the helper methods available are:
-#  - before_all, before_get, before_post, before_put, before_patch, before_delete
-#  - after_all, after_get, after_post, after_put, after_patch, after_delete
-ALL_METHODS = %w(get post put patch delete all)
-{% for type in ["before", "after"] %}
-  {% for method in ALL_METHODS %}
-    def {{type.id}}_{{method.id}}(path = "*", &block : HTTP::Server::Context -> _)
-     Kemal::Middleware::Filter::INSTANCE.{{type.id}}({{method}}.upcase, path, &block)
-    end
-  {% end %}
-{% end %}

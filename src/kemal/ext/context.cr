@@ -9,7 +9,11 @@ class HTTP::Server
 
     def params
       @request.url_params ||= route_lookup.params
-      @params ||= Kemal::ParamParser.new(@request)
+      @params ||= if @request.param_parser
+                    @request.param_parser.not_nil!
+                  else
+                    Kemal::ParamParser.new(@request)
+                  end
     end
 
     def redirect(url, status_code = 302)
@@ -23,11 +27,6 @@ class HTTP::Server
 
     def route_defined?
       route_lookup.found?
-    end
-
-    def session
-      @session ||= Kemal::Sessions.new(self)
-      @session.not_nil!
     end
 
     def get(name)

@@ -1,13 +1,6 @@
 require "./spec_helper"
 
 describe "Macros" do
-  describe "#basic_auth" do
-    it "adds HTTPBasicAuthHandler" do
-      basic_auth "serdar", "123"
-      Kemal.config.handlers.size.should eq 6
-    end
-  end
-
   describe "#public_folder" do
     it "sets public folder" do
       public_folder "/some/path/to/folder"
@@ -27,6 +20,7 @@ describe "Macros" do
       logging false
       Kemal.config.logging.should eq false
     end
+
     it "sets a custom logger" do
       config = Kemal::Config::INSTANCE
       logger CustomLogHandler.new
@@ -123,9 +117,9 @@ describe "Macros" do
   end
 
   describe "#gzip" do
-    it "adds HTTP::DeflateHandler to handlers" do
+    it "adds HTTP::CompressHandler to handlers" do
       gzip true
-      Kemal.config.handlers[4].should be_a(HTTP::DeflateHandler)
+      Kemal.config.handlers[4].should be_a(HTTP::CompressHandler)
     end
   end
 
